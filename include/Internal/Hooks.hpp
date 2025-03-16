@@ -25,3 +25,4 @@ namespace Internal
 } // namespace Internal
 
 // virtual std::uint32_t UseAmmo(const BGSObjectInstanceT<TESObjectWEAP>& a_weapon, BGSEquipIndex a_equipIndex, std::uint32_t a_shotCount);														// 0F0
+// inline constexpr std::array<REL::ID, 17> Actor{ REL::ID(1455516), REL::ID(985925), REL::ID(61957), REL::ID(720550), REL::ID(1378017), REL::ID(453840), REL::ID(48089), REL::ID(1145017), REL::ID(613231), REL::ID(519904), REL::ID(1383399), REL::ID(459179), REL::ID(1117514), REL::ID(193789), REL::ID(851552), REL::ID(1510044), REL::ID(585842) };
