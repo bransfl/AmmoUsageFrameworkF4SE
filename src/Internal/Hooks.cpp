@@ -1,4 +1,5 @@
 #include "Internal/Hooks.hpp"
+#include "Internal/Utility.hpp"
 #include "f4se/GameApi.h"
 #include <f4se_common/BranchTrampoline.h>
 #include <f4se_common/Relocation.h>
@@ -7,6 +8,8 @@ namespace Internal
 {
 	typedef uint32_t (*Signature_UseAmmo)(RE::Actor*, RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t);
 	REL::Relocation<Signature_UseAmmo> OriginalFunction_UseAmmo;
+
+	static constexpr uint8_t WEAPON_TYPE_GUN = 9; // laziness
 
 	// OG Patch
 	// int tmp = 0x13B79C0;
@@ -43,30 +46,27 @@ namespace Internal
 			RE::TESObjectWEAP* weap = (RE::TESObjectWEAP*)a_weapon.object;
 			RE::TESObjectWEAP::Data* data = (RE::TESObjectWEAP::Data*)a_weapon.instanceData.get();
 
-			uint8_t type = weap->weaponData.type.underlying();
+			logger::info("weapon: {:08X}, {}."sv, weap->GetFormID(), weap->GetFormEditorID());
 
+			uint8_t type = weap->weaponData.type.underlying();
 			if (data != nullptr) {
 				type = data->type.underlying();
 			}
 
-			// check the map from the parser for the weap's form or omods in the instance data, and set if needed
-			// this needs to be polished
-			auto* player = RE::PlayerCharacter::GetSingleton();
-			RE::EquippedItem& equipped = player->currentProcess->middleHigh->equippedItems[0];
-			RE::TESObjectWEAP* weapForm = (RE::TESObjectWEAP*)equipped.item.object;
-			RE::TESObjectWEAP::InstanceData* instance = (RE::TESObjectWEAP::InstanceData*)equipped.item.instanceData.get();
-			RE::EquippedWeaponData* weapData = (RE::EquippedWeaponData*)equipped.data.get();
-			
-
-			logger::info("weapon: {:08X}, {}."sv, weap->GetFormID(), weap->GetFormEditorID());
-
 			// we only care about guns, not melee weapons
-			if (type == 9) {
-				// a_shotCount = static_cast<uint32_t>(reach);
+			if (type != WEAPON_TYPE_GUN) {
+				return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
+			}
+
+			// ammo count is set here
+			uint32_t result = Utility::IsWeaponDataInMap(a_weapon);
+			if (result > 1) {
+				a_shotCount = result;
 				logger::info("a_count set to {}."sv, a_shotCount);
 			}
+			else {
+				return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
+			}
 		}
-
-		return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
 	}
 } // namespace Internal
