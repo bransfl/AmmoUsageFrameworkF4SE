@@ -5,15 +5,14 @@
 
 namespace Internal
 {
-	typedef uint32_t(Signature_UseAmmo)(RE::Actor*, RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t);
+	typedef uint32_t (*Signature_UseAmmo)(RE::Actor*, RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t);
 	REL::Relocation<Signature_UseAmmo> OriginalFunction_UseAmmo;
 
-	// RelocAddr<Signature_UseAmmo> UseAmmo_FunctionOG(0x0021E420);
-
-	// RelocPtr<void> UseAmmo_DestOG(0x00DFD890);
-	// RelocPtr<void> UseAmmo_DestNG(0x00C486A0);
-
-	// REL::Relocation<mem_AddScriptAddedLeveledObjectSig> OriginalFunction_AddScriptAddedLeveledObject;
+	// OG Patch
+	// int tmp = 0x13B79C0;
+	// REL::Relocation<uintptr_t> locationUseAmmo_OG{ REL::ID(26930228) };
+	// REL::Relocation<uintptr_t> ptr_UseAmmo_OG = REL::Relocation(0x1413B79C0);
+	// OriginalFunction_UseAmmo = trampoline.write_branch<5>(locationUseAmmo_OG.address(), &Hook_UseAmmo);
 	void Hooks::Install() noexcept
 	{
 		logger::info("Hook installing..."sv);
@@ -26,23 +25,14 @@ namespace Internal
 			return;
 		}
 		else {
-			// OG Patch
-			// OriginalFunction_UseAmmo = (Signature_UseAmmo)code.getCode();
-
-			// g_branchTrampoline.Write5Branch((uintptr_t)InterReloc::UseAmmo_Modded, (uintptr_t)UseAmmo_Hook);
-			// REL::Relocation<uintptr_t> ptr_UseAmmo_OG{ REL::ID(553651) };
-			// OriginalFunction_UseAmmo = trampoline.write_branch<5>(ptr_UseAmmo_OG.address(), &Hook_UseAmmo);
-
-			// if (!g_branchTrampoline.Create(14)) {
-			// 	return;
-			// }
-			// g_branchTrampoline.Write5Call(UseAmmo_DestOG.GetUIntPtr(), (uintptr_t)Hook_UseAmmo);
+			// uintptr_t addr = RE::VTABLE::Actor[16].address() + 8 * 0x05;
+			// REL::safe_write(addr, (uintptr_t)Hook_UseAmmo);
 		}
 
 		logger::info("Hook installed."sv);
 	}
 
-	// potential address: 0x872B3 or 0xC4C7C64 or 0x4D07820
+	// potential address: 0x13B79C0 or 0x872B3 or 0xC4C7C64 or 0x4D07820 or 0x19AEC40
 	// sylee's UseAmmo addresses - OG: 0x00DFD890, NG: 0x00C486A0 - maybe add 0x05 to these addresses?
 	//
 	uint32_t Hooks::Hook_UseAmmo(RE::Actor* a_this, RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon, RE::BGSEquipIndex a_equipIndex, uint32_t a_shotCount)
@@ -60,6 +50,13 @@ namespace Internal
 			}
 
 			// check the map from the parser for the weap's form or omods in the instance data, and set if needed
+			// this needs to be polished
+			auto* player = RE::PlayerCharacter::GetSingleton();
+			RE::EquippedItem& equipped = player->currentProcess->middleHigh->equippedItems[0];
+			RE::TESObjectWEAP* weapForm = (RE::TESObjectWEAP*)equipped.item.object;
+			RE::TESObjectWEAP::InstanceData* instance = (RE::TESObjectWEAP::InstanceData*)equipped.item.instanceData.get();
+			RE::EquippedWeaponData* weapData = (RE::EquippedWeaponData*)equipped.data.get();
+			
 
 			logger::info("weapon: {:08X}, {}."sv, weap->GetFormID(), weap->GetFormEditorID());
 
