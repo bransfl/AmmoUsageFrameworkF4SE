@@ -11,16 +11,31 @@ namespace Internal
 
 	static constexpr uint8_t WEAPON_TYPE_GUN = 9; // laziness
 
-	// OG Patch
-	// int tmp = 0x13B79C0;
-	// REL::Relocation<uintptr_t> locationUseAmmo_OG{ REL::ID(26930228) };
-	// REL::Relocation<uintptr_t> ptr_UseAmmo_OG = REL::Relocation(0x1413B79C0);
-	// OriginalFunction_UseAmmo = trampoline.write_branch<5>(locationUseAmmo_OG.address(), &Hook_UseAmmo);
+	template <class F, class T>
+	void write_vfunc()
+	{
+		REL::Relocation<std::uintptr_t> vtbl{ F::VTABLE[0] };
+		T::func = vtbl.write_vfunc(T::size, T::thunk);
+	}
+
+	struct UseAmmoStruct
+	{
+		static uint32_t thunk(RE::Actor*, RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t)
+		{
+			logger::info("ammo used"sv);
+			return 1;
+		}
+		[[maybe_unused]] static inline REL::Relocation<decltype(thunk)> func;
+
+		static inline size_t size = 0x2B;
+	};
+	// write_vfunc<RE::Actor, UseAmmoStruct>();
+	//  553651
 	void Hooks::Install() noexcept
 	{
 		logger::info("Hook installing..."sv);
 
-		// F4SE::Trampoline& trampoline = F4SE::GetTrampoline();
+		F4SE::Trampoline& trampoline = F4SE::GetTrampoline();
 
 		if (REL::Module::IsNG()) {
 			// NG Patch - TODO needs to be tested
@@ -30,14 +45,39 @@ namespace Internal
 		else {
 			// uintptr_t addr = RE::VTABLE::Actor[16].address() + 8 * 0x05;
 			// REL::safe_write(addr, (uintptr_t)Hook_UseAmmo);
+			REL::Relocation<uintptr_t> target_OG{ REL::ID(553651) };
+			OriginalFunction_UseAmmo = trampoline.write_branch<5>(target_OG.address(), &Hook_UseAmmo);
 		}
 
 		logger::info("Hook installed."sv);
 	}
 
+	// struct CheckValidTarget
+	// {
+	// 	static bool thunk(RE::Actor*, RE::TESObjectREFR&)
+	// 	{
+	// 		return true;
+	// 	}
+	// 	[[maybe_unused]] static inline REL::Relocation<decltype(thunk)> func;
+
+	// 	static inline size_t size = 0x0D6;
+	// };
+
+	// void Install()
+	// {
+	// 	stl::write_vfunc<RE::Character, CheckValidTarget>();
+	// }
+
+	// OG Patch
+	// int tmp = 0x13B79C0;
+	// REL::Relocation<uintptr_t> locationUseAmmo_OG{ REL::ID(26930228) };
+	// REL::Relocation<uintptr_t> ptr_UseAmmo_OG = REL::Relocation(0x1413B79C0);
+	// OriginalFunction_UseAmmo = trampoline.write_branch<5>(locationUseAmmo_OG.address(), &Hook_UseAmmo);
+
 	// potential address: 0x13B79C0 or 0x872B3 or 0xC4C7C64 or 0x4D07820 or 0x19AEC40
 	// sylee's UseAmmo addresses - OG: 0x00DFD890, NG: 0x00C486A0 - maybe add 0x05 to these addresses?
 	//
+
 	uint32_t Hooks::Hook_UseAmmo(RE::Actor* a_this, RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon, RE::BGSEquipIndex a_equipIndex, uint32_t a_shotCount)
 	{
 		logger::info("hook ran"sv);
@@ -64,9 +104,7 @@ namespace Internal
 				a_shotCount = result;
 				logger::info("a_count set to {}."sv, a_shotCount);
 			}
-			else {
-				return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
-			}
 		}
+		return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
 	}
 } // namespace Internal

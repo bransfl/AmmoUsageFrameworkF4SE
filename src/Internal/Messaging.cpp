@@ -1,4 +1,5 @@
 #include "Internal/Messaging.hpp"
+#include "Internal/Hooks.hpp"
 
 namespace Internal::Messaging
 {
@@ -15,6 +16,9 @@ namespace Internal::Messaging
 				break;
 			}
 			case F4SE::MessagingInterface::kPostLoadGame: {
+				// logger::info("installing hooks..."sv);
+				// Internal::Hooks::Install();
+				// logger::info("hooks installed."sv);
 				break;
 			}
 			case F4SE::MessagingInterface::kPreSaveGame: {
