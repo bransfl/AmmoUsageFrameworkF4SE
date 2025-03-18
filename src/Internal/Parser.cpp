@@ -1,4 +1,5 @@
 #include "Internal/Parser.hpp"
+#include "Internal/Maps.hpp"
 
 namespace Internal
 {

@@ -14,10 +14,10 @@ namespace Internal
 		RE::BSTArray<RE::EnchantmentItem*>* enchs = data->enchantments;
 		if (enchs && enchs->size() > 0) {
 			for (uint32_t i = 0; i < enchs->size(); i++) {
-				RE::EnchantmentItem* ench = enchs->at(i);
+				RE::EnchantmentItem* ench = (RE::EnchantmentItem*)enchs->at(i);
 				logger::info("ench on weap: {:08X}, {}"sv, ench->GetFormID(), ench->GetFormEditorID());
 			}
 		}
-		return 0;
+		return 1;
 	}
 } // namespace Internal
