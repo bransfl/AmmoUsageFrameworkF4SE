@@ -84,12 +84,15 @@ namespace Internal
 			RE::TESObjectWEAP* weap = (RE::TESObjectWEAP*)a_weapon.object;
 			RE::TESObjectWEAP::Data* data = (RE::TESObjectWEAP::Data*)a_weapon.instanceData.get();
 
-			logger::info("weapon: {:08X}, {}."sv, weap->GetFormID(), weap->GetFormEditorID());
+			logger::info("player's a_weapon form: {:08X}, {}."sv, weap->GetFormID(), weap->GetFormEditorID());
 
 			uint8_t type = weap->weaponData.type.underlying();
 			if (data) {
 				type = data->type.underlying();
 			}
+
+			logger::info("player's a_weapon - formid: {:08X}, editorid: {}, weaponType: {}."sv,
+				weap->GetFormID(), weap->GetFormEditorID(), type);
 
 			// we only care about guns. no melee weapons allowed
 			if (type != 9) {
@@ -100,8 +103,11 @@ namespace Internal
 			uint32_t result = Utility::IsWeaponDataInMap(a_weapon);
 			if (result > 1) {
 				a_shotCount = result;
-				logger::info("a_count set to {}."sv, a_shotCount);
+				logger::info("argument a_count set to {}."sv, a_shotCount);
 			}
+
+			// todo - check instancedata loaded ammo count in weapon.
+			// if it's less than a_shotCount, try to remove the remaining amt from the players inventory
 		}
 
 		return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
