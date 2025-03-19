@@ -1,4 +1,5 @@
 #include "Internal/Utility.hpp"
+#include "Internal/Maps.hpp"
 
 namespace Internal
 {
@@ -15,6 +16,7 @@ namespace Internal
 		if (enchs && enchs->size() > 0) {
 			for (uint32_t i = 0; i < enchs->size(); i++) {
 				RE::EnchantmentItem* ench = (RE::EnchantmentItem*)enchs->at(i);
+				
 				logger::info("ench on weap: {:08X}, {}"sv, ench->GetFormID(), ench->GetFormEditorID());
 			}
 		}

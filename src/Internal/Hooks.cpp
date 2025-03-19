@@ -9,8 +9,6 @@ namespace Internal
 	typedef uint32_t (*Signature_UseAmmo)(RE::Actor*, RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t);
 	REL::Relocation<Signature_UseAmmo> OriginalFunction_UseAmmo;
 
-	static constexpr uint8_t WEAPON_TYPE_GUN = 9; // laziness
-
 	template <class F, class T>
 	void write_vfunc()
 	{
@@ -89,12 +87,12 @@ namespace Internal
 			logger::info("weapon: {:08X}, {}."sv, weap->GetFormID(), weap->GetFormEditorID());
 
 			uint8_t type = weap->weaponData.type.underlying();
-			if (data != nullptr) {
+			if (data) {
 				type = data->type.underlying();
 			}
 
-			// we only care about guns, not melee weapons
-			if (type != WEAPON_TYPE_GUN) {
+			// we only care about guns. no melee weapons allowed
+			if (type != 9) {
 				return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
 			}
 
@@ -105,6 +103,7 @@ namespace Internal
 				logger::info("a_count set to {}."sv, a_shotCount);
 			}
 		}
+
 		return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
 	}
 } // namespace Internal
