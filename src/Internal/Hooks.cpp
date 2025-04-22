@@ -9,31 +9,20 @@ namespace Internal
 	typedef uint32_t (*Signature_UseAmmo)(RE::Actor*, RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t);
 	REL::Relocation<Signature_UseAmmo> OriginalFunction_UseAmmo;
 
-	template <class F, class T>
-	void write_vfunc()
-	{
-		REL::Relocation<std::uintptr_t> vtbl{ F::VTABLE[0] };
-		T::func = vtbl.write_vfunc(T::size, T::thunk);
-	}
-
-	struct UseAmmoStruct
-	{
-		static uint32_t thunk(RE::Actor*, RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t)
-		{
-			logger::info("ammo used"sv);
-			return 1;
-		}
-		[[maybe_unused]] static inline REL::Relocation<decltype(thunk)> func;
-
-		static inline size_t size = 0x2B;
-	};
-	// write_vfunc<RE::Actor, UseAmmoStruct>();
-	//  553651
 	void Hooks::Install() noexcept
 	{
 		logger::info("Hook installing..."sv);
 
-		F4SE::Trampoline& trampoline = F4SE::GetTrampoline();
+		// F4SE::Trampoline& trampoline = F4SE::GetTrampoline();
+		if (!g_localTrampoline.Create(256)) {
+			logger::warn("couldn't create codegen buffer. this is fatal. skipping remainder of init process."sv);
+			return;
+		}
+
+		if (!g_branchTrampoline.Create(14 * 4)) {
+			logger::warn("couldn't create codegen buffer. this is fatal. skipping remainder of init process."sv);
+			return;
+		}
 
 		if (REL::Module::IsNG()) {
 			// NG Patch - TODO needs to be tested
@@ -41,10 +30,8 @@ namespace Internal
 			return;
 		}
 		else {
-			// uintptr_t addr = RE::VTABLE::Actor[16].address() + 8 * 0x05;
-			// REL::safe_write(addr, (uintptr_t)Hook_UseAmmo);
-			REL::Relocation<uintptr_t> target_OG{ REL::ID(553651) };
-			OriginalFunction_UseAmmo = trampoline.write_branch<5>(target_OG.address(), &Hook_UseAmmo);
+			// thank you sylee
+			g_branchTrampoline.Write5Branch((std::uintptr_t)0x00DFD890, (std::uintptr_t)Hook_UseAmmo);
 		}
 
 		logger::info("Hook installed."sv);
@@ -81,33 +68,28 @@ namespace Internal
 		logger::info("hook ran"sv);
 
 		if (a_weapon.object != nullptr && a_weapon.object->formType == RE::ENUM_FORMTYPE::kWEAP) {
-			RE::TESObjectWEAP* weap = (RE::TESObjectWEAP*)a_weapon.object;
+			RE::TESObjectWEAP* weapon = (RE::TESObjectWEAP*)a_weapon.object;
 			RE::TESObjectWEAP::Data* data = (RE::TESObjectWEAP::Data*)a_weapon.instanceData.get();
 
-			logger::info("player's a_weapon form: {:08X}, {}."sv, weap->GetFormID(), weap->GetFormEditorID());
+			logger::info("player's a_weapon form: {:08X}, {}."sv,
+				weapon->GetFormID(), weapon->GetFormEditorID());
 
-			uint8_t type = weap->weaponData.type.underlying();
+			uint8_t weaponType = weapon->weaponData.type.underlying();
 			if (data) {
-				type = data->type.underlying();
+				weaponType = data->type.underlying();
 			}
 
 			logger::info("player's a_weapon - formid: {:08X}, editorid: {}, weaponType: {}."sv,
-				weap->GetFormID(), weap->GetFormEditorID(), type);
+				weapon->GetFormID(), weapon->GetFormEditorID(), weaponType);
 
 			// we only care about guns. no melee weapons allowed
-			if (type != 9) {
+			if (weaponType != 9) {
 				return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
 			}
 
 			// ammo count is set here
-			uint32_t result = Utility::IsWeaponDataInMap(a_weapon);
-			if (result > 1) {
-				a_shotCount = result;
-				logger::info("argument a_count set to {}."sv, a_shotCount);
-			}
-
-			// todo - check instancedata loaded ammo count in weapon.
-			// if it's less than a_shotCount, try to remove the remaining amt from the players inventory
+			a_shotCount = Utility::GetWeaponDataFromMaps(a_weapon);
+			logger::info("argument a_count set to {}."sv, a_shotCount);
 		}
 
 		return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);

@@ -6,9 +6,6 @@
 namespace Internal::Maps
 {
 	// form : ammo usage amount
-	// std::unordered_map<RE::EnchantmentItem*, uint32_t> enchMap;
-
-	// std::unordered_map<RE::TESObjectWEAP*, uint32_t> weapMap;
-
-	//
+	static std::unordered_map<RE::TESObjectWEAP*, uint32_t> weaponMap;
+	static std::unordered_map<RE::BGSKeyword*, uint32_t> keywordMap;
 } // namespace Internal::Maps
