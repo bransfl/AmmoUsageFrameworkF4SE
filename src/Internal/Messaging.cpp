@@ -6,10 +6,8 @@ namespace Internal::Messaging
 	void Callback(F4SE::MessagingInterface::Message* a_msg)
 	{
 		switch (a_msg->type) {
-			case F4SE::MessagingInterface::kPostLoadGame: {
-				// logger::info("installing hooks..."sv);
-				// Internal::Hooks::Install();
-				// logger::info("hooks installed."sv);
+			case F4SE::MessagingInterface::kGameDataReady: {
+				// TODO - parse inis here
 				break;
 			}
 			default: {

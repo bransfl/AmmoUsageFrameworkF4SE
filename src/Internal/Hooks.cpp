@@ -1,8 +1,6 @@
 #include "Internal/Hooks.hpp"
 #include "Internal/Utility.hpp"
 
-
-
 namespace Internal
 {
 	typedef uint32_t (*Signature_UseAmmo)(RE::Actor*, RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t);
@@ -12,13 +10,17 @@ namespace Internal
 	{
 		logger::info("Hook installing..."sv);
 
+		F4SE::Trampoline& trampoline = F4SE::GetTrampoline();
+
 		if (REL::Module::IsNG()) {
 			// Next-Gen
-			//
+			REL::Relocation<uintptr_t> ptr_UseAmmo_NG{ REL::ID(2231061) };
+			OriginalFunction_UseAmmo = trampoline.write_branch<5>(ptr_UseAmmo_NG.address(), &Hook_UseAmmo);
 		}
 		else {
 			// Last-Gen
-			//
+			REL::Relocation<uintptr_t> ptr_UseAmmo_OG{ REL::ID(228485) };
+			OriginalFunction_UseAmmo = trampoline.write_branch<5>(ptr_UseAmmo_OG.address(), &Hook_UseAmmo);
 		}
 
 		logger::info("Hook installed."sv);

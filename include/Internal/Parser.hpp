@@ -8,10 +8,10 @@ namespace Internal
 	{
 	public:
 		/**
-		 * @brief Gather and parse all inis.
-		 * @details details
-		 * @param ini ini
+		 * @brief Gather and parse all inis into Maps.
+		 * @details Details.
+		 * @param a_ini The INI to parse.
 		 */
-		static void ParseINIs(CSimpleIniA& ini) noexcept;
+		static void ParseINIs(CSimpleIniA& a_ini) noexcept;
 	};
 } // namespace Internal
