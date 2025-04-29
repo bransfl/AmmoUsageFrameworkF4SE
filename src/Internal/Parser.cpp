@@ -89,6 +89,8 @@ namespace Internal
 
 	void Parser::ParsePrepMapsToMaps() noexcept
 	{
-		//
+		// when finished
+		Maps::weaponPrepMap.clear();
+		Maps::keywordPrepMap.clear();
 	}
 } // namespace Internal
