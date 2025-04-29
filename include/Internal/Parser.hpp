@@ -13,5 +13,10 @@ namespace Internal
 		 * @param a_ini The INI to parse.
 		 */
 		static void ParseINIs(CSimpleIniA& a_ini) noexcept;
+
+		/**
+		 * @brief Convert Maps::[type]PrepMap -> Maps::[type]Map.
+		 */
+		static void ParsePrepMapsToMaps() noexcept;
 	};
 } // namespace Internal

@@ -7,7 +7,8 @@ namespace Internal::Messaging
 	{
 		switch (a_msg->type) {
 			case F4SE::MessagingInterface::kGameDataReady: {
-				// TODO - parse inis here
+				// todo:
+				//	parse from prepMaps to actual map
 				break;
 			}
 			default: {

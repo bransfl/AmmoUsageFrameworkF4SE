@@ -18,16 +18,15 @@ namespace Internal
 
 		/**
 		 * @brief Gets all keywords of the given weapon object instance.
-		 * 
+		 *
 		 * @param a_weapon a_weapon
 		 * @return return
 		 */
 		static std::vector<RE::BGSKeyword*> GetWeaponKeywords(RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon);
 
-
 		/**
 		 * @brief Parses INI file Keys into TESForms.
-		 * 
+		 *
 		 * @param a_identifier a_identifier.
 		 * @return Return.
 		 */
@@ -35,7 +34,7 @@ namespace Internal
 
 		/**
 		 * @brief Brief.
-		 * 
+		 *
 		 * @param a_modName	The modname to check.
 		 * @return True if the mod is installed.
 		 * 		   False if he mod is not installed.
