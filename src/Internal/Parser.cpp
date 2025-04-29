@@ -1,5 +1,6 @@
 #include "Internal/Parser.hpp"
 #include "Internal/Maps.hpp"
+#include "Internal/Utility.hpp"
 
 namespace Internal
 {
@@ -89,8 +90,42 @@ namespace Internal
 
 	void Parser::ParsePrepMapsToMaps() noexcept
 	{
+		// loop through weapon prep
+		for (const auto& weaponPrepPair : Maps::weaponPrepMap) {
+			std::string weaponString = weaponPrepPair.first;
+			uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(weaponPrepPair.second, nullptr, 16));
+
+			logger::info("Parser::ParsePrepMapsToMaps::weaponPrepPair is parsing weaponString: {} with ammoCount {}"sv,
+				weaponString, ammoCount);
+			RE::TESForm* weaponTESForm = Utility::GetFormFromIdentifier(weaponString);
+			RE::TESObjectWEAP* weaponForm = (RE::TESObjectWEAP*)weaponTESForm;
+			if (weaponForm) {
+				// brackets since we have to insert it as a pair
+				Maps::weaponMap.insert({ weaponForm, ammoCount });
+			}
+		}
+
+		// loop through keyword prep
+		for (const auto& keywordPrepPair : Maps::keywordPrepMap) {
+			std::string keywordString = keywordPrepPair.first;
+			uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(keywordPrepPair.second, nullptr, 16));
+
+			logger::info("Parser::ParsePrepMapsToMaps::keywordPrepPair is parsing keywordString: {} with ammoCount{}"sv,
+				keywordString, ammoCount);
+			RE::TESForm* keywordTESForm = Utility::GetFormFromIdentifier(keywordString);
+			RE::BGSKeyword* keywordForm = (RE::BGSKeyword*)keywordTESForm;
+			if (keywordForm) {
+				// brackets since we have to insert it as a pair
+				Maps::keywordMap.insert({ keywordForm, ammoCount });
+			}
+		}
+
 		// when finished
-		Maps::weaponPrepMap.clear();
-		Maps::keywordPrepMap.clear();
+		if (!Maps::weaponPrepMap.empty()) {
+			Maps::weaponPrepMap.clear();
+		}
+		if (!Maps::keywordPrepMap.empty()) {
+			Maps::keywordPrepMap.clear();
+		}
 	}
 } // namespace Internal

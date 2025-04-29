@@ -1,14 +1,13 @@
 #include "Internal/Messaging.hpp"
-// #include "Internal/Hooks.hpp"
+#include "Internal/Parser.hpp"
 
-namespace Internal::Messaging
+namespace Internal
 {
-	void Callback(F4SE::MessagingInterface::Message* a_msg)
+	void Messaging::Callback(F4SE::MessagingInterface::Message* a_msg)
 	{
 		switch (a_msg->type) {
 			case F4SE::MessagingInterface::kGameDataReady: {
-				// todo:
-				//	parse from prepMaps to actual map
+				Parser::ParsePrepMapsToMaps();
 				break;
 			}
 			default: {
