@@ -1,5 +1,7 @@
 #pragma once
 
+#define WEAPON_TYPE_GUN 9
+
 namespace Internal
 {
 	class Hooks
