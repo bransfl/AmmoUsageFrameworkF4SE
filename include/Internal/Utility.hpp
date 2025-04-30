@@ -14,7 +14,7 @@ namespace Internal
 		 *		   Returns 1 if the weapon or enchantments were not found in the map.
 		 * 		   Returns >1 if the weapon or enchantments were found in the map.
 		 */
-		static uint32_t GetWeaponDataFromMaps(RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon);
+		static uint32_t GetWeaponDataFromMaps(const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon);
 
 		/**
 		 * @brief Gets all keywords of the given weapon object instance.
@@ -22,7 +22,7 @@ namespace Internal
 		 * @param a_weapon a_weapon
 		 * @return return
 		 */
-		static std::vector<RE::BGSKeyword*> GetWeaponKeywords(RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon);
+		static std::vector<RE::BGSKeyword*> GetWeaponKeywords(const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon);
 
 		/**
 		 * @brief Parses INI file Keys into TESForms.

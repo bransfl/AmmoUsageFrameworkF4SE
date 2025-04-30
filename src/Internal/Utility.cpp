@@ -4,7 +4,7 @@
 
 namespace Internal
 {
-	uint32_t Utility::GetWeaponDataFromMaps(RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon)
+	uint32_t Utility::GetWeaponDataFromMaps(const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon)
 	{
 		// check keywords first, since they have priority
 		std::vector<RE::BGSKeyword*> weaponKeywords = Utility::GetWeaponKeywords(a_weapon);
@@ -28,7 +28,7 @@ namespace Internal
 		return 1;
 	}
 
-	std::vector<RE::BGSKeyword*> Utility::GetWeaponKeywords(RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon)
+	std::vector<RE::BGSKeyword*> Utility::GetWeaponKeywords(const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon)
 	{
 		auto keywords = std::vector<RE::BGSKeyword*>();
 
