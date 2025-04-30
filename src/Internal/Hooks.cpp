@@ -60,7 +60,7 @@ namespace Internal
 			RE::TESObjectWEAP* weapon = (RE::TESObjectWEAP*)a_weapon.object;
 			RE::TESObjectWEAP::Data* data = (RE::TESObjectWEAP::Data*)a_weapon.instanceData.get();
 
-			logger::info("player's a_weapon form: {:08X}, {}."sv,
+			logger::info("player's a_weapon form: {:08X}, {}"sv,
 				weapon->GetFormID(), weapon->GetFormEditorID());
 
 			uint8_t weaponType = weapon->weaponData.type.underlying();
@@ -68,7 +68,7 @@ namespace Internal
 				weaponType = data->type.underlying();
 			}
 
-			logger::info("player's a_weapon - formid: {:08X}, editorid: {}, weaponType: {}."sv,
+			logger::info("player's a_weapon - formid: {:08X}, editorid: {}, weaponType: {}"sv,
 				weapon->GetFormID(), weapon->GetFormEditorID(), weaponType);
 
 			// we only care about guns. no melee weapons allowed
@@ -78,7 +78,7 @@ namespace Internal
 
 			// ammo count is set here
 			a_shotCount = Utility::GetWeaponDataFromMaps(a_weapon);
-			logger::info("Utility::GetWeaponDataFromMaps on weapon {} returned {}."sv,
+			logger::info("Utility::GetWeaponDataFromMaps on weapon {} returned {}"sv,
 				weapon->GetFormEditorID(), a_shotCount);
 		}
 

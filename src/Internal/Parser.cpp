@@ -7,10 +7,17 @@ namespace Internal
 	// todo credit music type distributor author
 	void Parser::ParseINIs(CSimpleIniA& a_ini) noexcept
 	{
+		if (!Maps::weaponPrepMap.empty()) {
+			Maps::weaponPrepMap.clear();
+		}
+		if (!Maps::keywordPrepMap.empty()) {
+			Maps::keywordPrepMap.clear();
+		}
+
 		const std::filesystem::path filepath = R"(.\Data)";
 		const std::wstring pattern = L"_AMMO.ini";
-		const std::string patternStr = "_AMMO.ini";
-		const std::string_view iniExtension = ".ini"sv;
+		constexpr std::string patternStr = "_AMMO.ini";
+		constexpr std::string_view iniExtension = ".ini"sv;
 
 		if (!exists(filepath)) {
 			logger::error("ERROR: Failed to find Data directory"sv);
@@ -40,7 +47,8 @@ namespace Internal
 			}
 
 			if (std::find(ammoInis.begin(), ammoInis.end(), path) != ammoInis.end()) {
-				logger::warn("WARNING: Found duplicate _MUS.ini file: {}"sv, filename.string());
+				logger::warn("WARNING: Found duplicate _AMMO.ini file: {}"sv,
+					filename.string());
 				continue;
 			}
 
@@ -50,7 +58,7 @@ namespace Internal
 		// parse inis into prep map
 		for (const auto& f : ammoInis) {
 			const std::string filename = f.filename().string();
-			logger::info("Loading config file: {}", filename);
+			logger::info("Loading config file: {}"sv, filename);
 			a_ini.LoadFile(f.wstring().data());
 			CSimpleIniA::TNamesDepend keys{};
 
@@ -64,7 +72,8 @@ namespace Internal
 					a_ini.GetAllValues("Weapons", k.pItem, values);
 					for (const auto& v : values) {
 						Maps::weaponPrepMap[k.pItem] = v.pItem;
-						logger::info("Added [{}: {}] to weapon prep map", k.pItem, v.pItem);
+						logger::info("Added [{}: {}] to weapon prep map"sv,
+							k.pItem, v.pItem);
 					}
 				}
 			}
@@ -79,7 +88,8 @@ namespace Internal
 					a_ini.GetAllValues("Keywords", k.pItem, values);
 					for (const auto& v : values) {
 						Maps::keywordPrepMap[k.pItem] = v.pItem;
-						logger::info("Added [{}: {}] to keyword map", k.pItem, v.pItem);
+						logger::info("Added [{}: {}] to keyword prep map"sv,
+							k.pItem, v.pItem);
 					}
 				}
 			}
@@ -95,10 +105,9 @@ namespace Internal
 			std::string weaponString = weaponPrepPair.first;
 			uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(weaponPrepPair.second, nullptr, 16));
 
-			logger::info("Parser::ParsePrepMapsToMaps::weaponPrepPair is parsing weaponString: {} with ammoCount {}"sv,
+			logger::info("Parser::ParsePrepMapsToMaps::weaponPrepPair is parsing weaponString: {} with ammoCount: {}"sv,
 				weaponString, ammoCount);
-			RE::TESForm* weaponTESForm = Utility::GetFormFromIdentifier(weaponString);
-			RE::TESObjectWEAP* weaponForm = (RE::TESObjectWEAP*)weaponTESForm;
+			RE::TESObjectWEAP* weaponForm = (RE::TESObjectWEAP*)Utility::GetFormFromIdentifier(weaponString);
 			if (weaponForm) {
 				// brackets since we have to insert it as a pair
 				Maps::weaponMap.insert({ weaponForm, ammoCount });
@@ -110,17 +119,16 @@ namespace Internal
 			std::string keywordString = keywordPrepPair.first;
 			uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(keywordPrepPair.second, nullptr, 16));
 
-			logger::info("Parser::ParsePrepMapsToMaps::keywordPrepPair is parsing keywordString: {} with ammoCount{}"sv,
+			logger::info("Parser::ParsePrepMapsToMaps::keywordPrepPair is parsing keywordString: {} with ammoCount: {}"sv,
 				keywordString, ammoCount);
-			RE::TESForm* keywordTESForm = Utility::GetFormFromIdentifier(keywordString);
-			RE::BGSKeyword* keywordForm = (RE::BGSKeyword*)keywordTESForm;
+			RE::BGSKeyword* keywordForm = (RE::BGSKeyword*)Utility::GetFormFromIdentifier(keywordString);
 			if (keywordForm) {
 				// brackets since we have to insert it as a pair
 				Maps::keywordMap.insert({ keywordForm, ammoCount });
 			}
 		}
 
-		// when finished
+		// we are finished with the prep maps
 		if (!Maps::weaponPrepMap.empty()) {
 			Maps::weaponPrepMap.clear();
 		}
