@@ -6,21 +6,28 @@ namespace Internal
 {
 	uint32_t Utility::GetWeaponDataFromMaps(const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon)
 	{
+		if (Maps::keywordDataMap.empty() && Maps::weaponDataMap.empty()) {
+			logger::info("Utility::GetWeaponDataFromMaps - both DataMaps were empty, return 1"sv);
+			return 1;
+		}
+
 		// check keywords first, since they have priority
 		std::vector<RE::BGSKeyword*> weaponKeywords = Utility::GetWeaponKeywords(a_weapon);
 		if (weaponKeywords.size() > 0) {
 			for (RE::BGSKeyword* keyword : weaponKeywords) {
-				if (Maps::keywordMap.contains(keyword)) {
-					return Maps::keywordMap.at(keyword);
+				if (Maps::keywordDataMap.contains(keyword)) {
+					return Maps::keywordDataMap.at(keyword);
 				}
 			}
 		}
 
+		// maybe check objectmods?
+
 		// check weapon form second, since this is a fallback
 		RE::TESObjectWEAP* weaponForm = (RE::TESObjectWEAP*)a_weapon.object;
 		if (weaponForm) {
-			if (Maps::weaponMap.contains(weaponForm)) {
-				return Maps::weaponMap.at(weaponForm);
+			if (Maps::weaponDataMap.contains(weaponForm)) {
+				return Maps::weaponDataMap.at(weaponForm);
 			}
 		}
 
@@ -71,11 +78,14 @@ namespace Internal
 
 		size_t delimiter = a_identifier.find("|");
 		if (delimiter == std::string::npos) {
+			// if "|" was not found
 			return nullptr;
 		}
-		std::string modName = a_identifier.substr(0, delimiter);
+
+		std::string_view modName = a_identifier.substr(0, delimiter);
 		std::string modForm = a_identifier.substr(delimiter + 1);
 		if (!Utility::IsPluginInstalled(modName)) {
+			// mod was not loaded
 			return nullptr;
 		}
 
@@ -83,7 +93,7 @@ namespace Internal
 		if (modFile && modFile->compileIndex != -1) {
 			uint32_t formID = std::stoul(modForm, nullptr, 16) & 0xFFFFFF;
 			uint32_t flags = GetOffset<uint32_t>(modFile, 0x334);
-			
+
 			// we do this so the formid is load order agnostic
 			if (flags & (1 << 9)) {
 				// esl plugin

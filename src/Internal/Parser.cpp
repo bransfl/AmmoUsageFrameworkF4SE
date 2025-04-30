@@ -7,16 +7,11 @@ namespace Internal
 	// todo credit music type distributor author
 	void Parser::ParseINIs(CSimpleIniA& a_ini) noexcept
 	{
-		if (!Maps::weaponPrepMap.empty()) {
-			Maps::weaponPrepMap.clear();
-		}
-		if (!Maps::keywordPrepMap.empty()) {
-			Maps::keywordPrepMap.clear();
-		}
+		Maps::ClearPrepMaps();
+		Maps::ClearDataMaps();
 
 		const std::filesystem::path filepath = R"(.\Data)";
 		const std::wstring pattern = L"_AMMO.ini";
-		constexpr std::string patternStr = "_AMMO.ini";
 		constexpr std::string_view iniExtension = ".ini"sv;
 
 		if (!exists(filepath)) {
@@ -56,10 +51,10 @@ namespace Internal
 		}
 
 		// parse inis into prep map
-		for (const auto& f : ammoInis) {
-			const std::string filename = f.filename().string();
+		for (const auto& file : ammoInis) {
+			const std::string filename = file.filename().string();
 			logger::info("Loading config file: {}"sv, filename);
-			a_ini.LoadFile(f.wstring().data());
+			a_ini.LoadFile(file.wstring().data());
 			CSimpleIniA::TNamesDepend keys{};
 
 			// parse weapons
@@ -67,13 +62,18 @@ namespace Internal
 				CSimpleIniA::TNamesDepend weaponsKeys{};
 				a_ini.GetAllKeys("Weapons", weaponsKeys);
 
-				for (const auto& k : weaponsKeys) {
+				for (const auto& key : weaponsKeys) {
+					if (key.pItem == nullptr) {
+						logger::warn("\tA weapon was nullptr"sv);
+						continue;
+					}
+
 					CSimpleIniA::TNamesDepend values{};
-					a_ini.GetAllValues("Weapons", k.pItem, values);
-					for (const auto& v : values) {
-						Maps::weaponPrepMap[k.pItem] = v.pItem;
-						logger::info("Added [{}: {}] to weapon prep map"sv,
-							k.pItem, v.pItem);
+					a_ini.GetAllValues("Weapons", key.pItem, values);
+					for (const auto& val : values) {
+						Maps::weaponPrepMap[key.pItem] = val.pItem;
+						logger::info("\tAdded [{}: {}] to weapon prep map"sv,
+							key.pItem, val.pItem);
 					}
 				}
 			}
@@ -83,13 +83,18 @@ namespace Internal
 				CSimpleIniA::TNamesDepend keywordsKeys{};
 				a_ini.GetAllKeys("Keywords", keywordsKeys);
 
-				for (const auto& k : keywordsKeys) {
+				for (const auto& key : keywordsKeys) {
+					if (key.pItem == nullptr) {
+						logger::warn("\tA keyword was nullptr"sv);
+						continue;
+					}
+
 					CSimpleIniA::TNamesDepend values{};
-					a_ini.GetAllValues("Keywords", k.pItem, values);
-					for (const auto& v : values) {
-						Maps::keywordPrepMap[k.pItem] = v.pItem;
-						logger::info("Added [{}: {}] to keyword prep map"sv,
-							k.pItem, v.pItem);
+					a_ini.GetAllValues("Keywords", key.pItem, values);
+					for (const auto& val : values) {
+						Maps::keywordPrepMap[key.pItem] = val.pItem;
+						logger::info("\tAdded [{}: {}] to keyword prep map"sv,
+							key.pItem, val.pItem);
 					}
 				}
 			}
@@ -110,7 +115,7 @@ namespace Internal
 			RE::TESObjectWEAP* weaponForm = (RE::TESObjectWEAP*)Utility::GetFormFromIdentifier(weaponString);
 			if (weaponForm) {
 				// brackets since we have to insert it as a pair
-				Maps::weaponMap.insert({ weaponForm, ammoCount });
+				Maps::weaponDataMap.insert({ weaponForm, ammoCount });
 			}
 		}
 
@@ -124,16 +129,11 @@ namespace Internal
 			RE::BGSKeyword* keywordForm = (RE::BGSKeyword*)Utility::GetFormFromIdentifier(keywordString);
 			if (keywordForm) {
 				// brackets since we have to insert it as a pair
-				Maps::keywordMap.insert({ keywordForm, ammoCount });
+				Maps::keywordDataMap.insert({ keywordForm, ammoCount });
 			}
 		}
 
-		// we are finished with the prep maps
-		if (!Maps::weaponPrepMap.empty()) {
-			Maps::weaponPrepMap.clear();
-		}
-		if (!Maps::keywordPrepMap.empty()) {
-			Maps::keywordPrepMap.clear();
-		}
+		// we are finished with the prep maps, but we still need to keep data maps in memory
+		Maps::ClearPrepMaps();
 	}
 } // namespace Internal

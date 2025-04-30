@@ -15,7 +15,7 @@ namespace Internal
 		static void ParseINIs(CSimpleIniA& a_ini) noexcept;
 
 		/**
-		 * @brief Convert Maps::[type]PrepMap -> Maps::[type]Map.
+		 * @brief Convert Maps::[type]PrepMap -> Maps::[type]DataMap.
 		 */
 		static void ParsePrepMapsToMaps() noexcept;
 	};
