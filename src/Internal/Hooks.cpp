@@ -4,61 +4,41 @@
 
 namespace Internal
 {
-	typedef uint32_t(Signature_UseAmmo)(RE::Actor*, const RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t);
-	REL::Relocation<Signature_UseAmmo> OriginalFunction_UseAmmo;
-	DetourXS UseAmmoHook;
+	// typedef uint32_t(Signature_UseAmmo)(RE::Actor*, const RE::BGSObjectInstanceT<RE::TESObjectWEAP>&, RE::BGSEquipIndex, uint32_t);
+	// REL::Relocation<Signature_UseAmmo> OriginalFunction_UseAmmo;
+	// DetourXS UseAmmoHook;
+	using Actor_UseAmmo_Sig = decltype(&RE::Actor::UseAmmo);
+	REL::Relocation<Actor_UseAmmo_Sig> Actor_UseAmmo_Func;
+	DetourXS Actor_UseAmmo_Hook;
 
 	void Hooks::Install() noexcept
 	{
 		logger::info("Hook installing..."sv);
 
-		// F4SE::Trampoline& trampoline = F4SE::GetTrampoline();
-
-		// if (REL::Module::IsNG()) {
-		// 	// Next-Gen
-		// 	REL::Relocation<uintptr_t> ptr_UseAmmo_NG{ REL::ID(2231061) };
-		// 	OriginalFunction_UseAmmo = trampoline.write_call<5>(ptr_UseAmmo_NG.address(), &Hook_UseAmmo);
-		// }
-		// else {
-		// 	// Last-Gen
-		// 	REL::Relocation<uintptr_t> ptr_UseAmmo_OG{ REL::ID(228455) };
-		// 	OriginalFunction_UseAmmo = trampoline.write_call<5>(ptr_UseAmmo_OG.address(), &Hook_UseAmmo);
-		// }
-
-		if (REL::Module::IsNG()) {
-			REL::Relocation<Signature_UseAmmo> UseAmmoLocationNG{ REL::ID(2231061) };
-			if (UseAmmoHook.Create(reinterpret_cast<LPVOID>(UseAmmoLocationNG.address()), &Hook_UseAmmo)) {
-				OriginalFunction_UseAmmo = reinterpret_cast<std::uintptr_t>(UseAmmoHook.GetTrampoline());
-			}
-			else {
-				logger::warn("Failed to create Next-Gen Hook"sv);
-			}
+		REL::Relocation<Actor_UseAmmo_Sig> Actor_UseAmmo_Location{ REL::ID(228455) };
+		if (Actor_UseAmmo_Hook.Create(reinterpret_cast<LPVOID>(Actor_UseAmmo_Location.address()), &Hooked_Actor_UseAmmo)) {
+			Actor_UseAmmo_Func = reinterpret_cast<std::uintptr_t>(Actor_UseAmmo_Hook.GetTrampoline());
+			logger::info("Installed Actor::UseAmmo hook"sv);
 		}
 		else {
-			REL::Relocation<Signature_UseAmmo> UseAmmoLocationOG{ REL::ID(228455) };
-			if (UseAmmoHook.Create(reinterpret_cast<LPVOID>(UseAmmoLocationOG.address()), &Hook_UseAmmo)) {
-				OriginalFunction_UseAmmo = reinterpret_cast<std::uintptr_t>(UseAmmoHook.GetTrampoline());
-			}
-			else {
-				logger::warn("Failed to create Last-Gen Hook"sv);
-			}
+			logger::warn("Failed to install Actor::UseAmmo hook"sv);
 		}
 
 		logger::info("Hook installed."sv);
 	}
 
-	uint32_t Hooks::Hook_UseAmmo(RE::Actor* a_this, const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon, RE::BGSEquipIndex a_equipIndex, uint32_t a_shotCount)
+	uint32_t Hooks::Hooked_Actor_UseAmmo(RE::Actor* a_this, const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon, RE::BGSEquipIndex a_equipIndex, std::uint32_t a_shotCount)
 	{
 		logger::info("hook ran"sv);
 
 		if (a_this != RE::PlayerCharacter::GetSingleton()) {
 			// we only need this to run for the player
-			return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
+			return Actor_UseAmmo_Func(a_this, a_weapon, a_equipIndex, a_shotCount);
 		}
 
 		if (a_weapon.object != nullptr && a_weapon.object->formType == RE::ENUM_FORMTYPE::kWEAP) {
 			RE::TESObjectWEAP* weapon = (RE::TESObjectWEAP*)a_weapon.object;
-			RE::TESObjectWEAP::Data* data = (RE::TESObjectWEAP::Data*)a_weapon.instanceData.get();
+			RE::TESObjectWEAP::InstanceData* data = (RE::TESObjectWEAP::InstanceData*)a_weapon.instanceData.get();
 
 			logger::info("player's a_weapon form: {:08X}, {}"sv,
 				weapon->GetFormID(), weapon->GetFormEditorID());
@@ -73,7 +53,7 @@ namespace Internal
 
 			// we only care about guns. no melee weapons allowed
 			if (weaponType != WEAPON_TYPE_GUN) {
-				return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
+				return Actor_UseAmmo_Func(a_this, a_weapon, a_equipIndex, a_shotCount);
 			}
 
 			// ammo count is set here
@@ -82,6 +62,6 @@ namespace Internal
 				weapon->GetFormEditorID(), a_shotCount);
 		}
 
-		return OriginalFunction_UseAmmo(a_this, a_weapon, a_equipIndex, a_shotCount);
+		return Actor_UseAmmo_Func(a_this, a_weapon, a_equipIndex, a_shotCount);
 	}
 } // namespace Internal
