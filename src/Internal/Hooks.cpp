@@ -56,10 +56,16 @@ namespace Internal
 				return Actor_UseAmmo_Func(a_this, a_weapon, a_equipIndex, a_shotCount);
 			}
 
-			// ammo count is set here
-			a_shotCount = Utility::GetWeaponDataFromMaps(a_weapon);
+			// ammo count is set here (ugly bc i was testing logging)
+			uint32_t newShotCount = Utility::GetWeaponDataFromMaps(a_weapon);
+			if (newShotCount > 1) {
+				a_shotCount = newShotCount;
+			}
+			else {
+				//
+			}
 			logger::info("Utility::GetWeaponDataFromMaps on weapon {} returned {}"sv,
-				weapon->GetFormEditorID(), a_shotCount);
+				weapon->GetFormEditorID(), newShotCount);
 		}
 
 		return Actor_UseAmmo_Func(a_this, a_weapon, a_equipIndex, a_shotCount);
