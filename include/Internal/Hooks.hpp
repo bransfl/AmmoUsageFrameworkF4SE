@@ -22,7 +22,7 @@ namespace Internal
 		 * @param a_shotCount The amount of ammo used per shot.
 		 * @return Return.
 		 */
-		static uint32_t Hooked_Actor_UseAmmo(RE::Actor* a_this, const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon, RE::BGSEquipIndex a_equipIndex, std::uint32_t a_shotCount);
+		static uint32_t Hook_UseAmmo(RE::Actor* a_this, const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon, RE::BGSEquipIndex a_equipIndex, std::uint32_t a_shotCount);
 	};
 } // namespace Internal
 
