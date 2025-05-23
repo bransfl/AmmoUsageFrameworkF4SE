@@ -47,14 +47,5 @@ namespace Internal
 		 * @return Return.
 		 */
 		static RE::TESForm* GetFormFromIdentifier(const std::string& identifier);
-
-		/**
-		 * @brief Brief.
-		 *
-		 * @param a_modName	The modname to check.
-		 * @return True if the mod is installed.
-		 * 		   False if he mod is not installed.
-		 */
-		static bool IsPluginInstalled(const char* a_modName);
 	};
 }

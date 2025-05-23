@@ -54,12 +54,12 @@ namespace Internal
 
 		logger::info("Parser::ParseINIs() -> Finished finding _AMMO.ini files. Total count: {}"sv, ammoInis.size());
 
-		logger::info("Parser::ParseINIs() -> Starting to parse ammoInis into Prep Map"sv);
+		logger::info("Parser::ParseINIs() -> Begin parsing ammoInis into Prep Map"sv);
 
 		// parse inis into prep map
 		for (const auto& file : ammoInis) {
 			const std::string filename = file.filename().string();
-			logger::info("Parser::ParseINIs() -> Loading config file: {}"sv, filename);
+			logger::info("\tParser::ParseINIs() -> Loading config file: {}:"sv, filename);
 			a_ini.LoadFile(file.wstring().data());
 			CSimpleIniA::TNamesDepend keys{};
 
@@ -70,7 +70,7 @@ namespace Internal
 
 				for (const auto& key : weaponsKeys) {
 					if (key.pItem == nullptr) {
-						logger::warn("\tA weapon was nullptr"sv);
+						logger::warn("\t\tA weapon was nullptr"sv);
 						continue;
 					}
 
@@ -78,10 +78,13 @@ namespace Internal
 					a_ini.GetAllValues("Weapons", key.pItem, values);
 					for (const auto& val : values) {
 						Maps::weaponPrepMap[key.pItem] = val.pItem;
-						logger::info("\tAdded [{}, {}] to Weapon Prep Map"sv,
+						logger::info("\t\tAdded [{}, {}] to Weapon Prep Map"sv,
 							key.pItem, val.pItem);
 					}
 				}
+			}
+			else {
+				logger::info("\t\tConfig file did not have a Weapons section."sv);
 			}
 
 			// parse keywords
@@ -91,7 +94,7 @@ namespace Internal
 
 				for (const auto& key : keywordsKeys) {
 					if (key.pItem == nullptr) {
-						logger::warn("\tA keyword was nullptr"sv);
+						logger::warn("\t\tA keyword was nullptr"sv);
 						continue;
 					}
 
@@ -99,10 +102,13 @@ namespace Internal
 					a_ini.GetAllValues("Keywords", key.pItem, values);
 					for (const auto& val : values) {
 						Maps::keywordPrepMap[key.pItem] = val.pItem;
-						logger::info("\tAdded [{}, {}] to Keyword Prep Map"sv,
+						logger::info("\t\tAdded [{}, {}] to Keyword Prep Map"sv,
 							key.pItem, val.pItem);
 					}
 				}
+			}
+			else {
+				logger::info("\t\tConfig file did not have a Keywords section."sv);
 			}
 
 			a_ini.Reset();
@@ -112,29 +118,39 @@ namespace Internal
 	void Parser::ParsePrepMapsToMaps() noexcept
 	{
 		// parse found weapons into forms
+		logger::info("Parser::ParsePrepMapsToMaps() -> Parsing Weapon Prep Map:"sv);
 		if (!Maps::weaponPrepMap.empty() && Maps::weaponPrepMap.size() > 0) {
 			for (const auto& weaponPrepPair : Maps::weaponPrepMap) {
 				std::string weaponString = weaponPrepPair.first;
 				uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(weaponPrepPair.second, nullptr, 16));
 
-				logger::info("Parser::ParsePrepMapsToMaps() -> Parsing [{}, {}]"sv, weaponString, ammoCount);
+				logger::info("\tParsing: [{}, {}]"sv, weaponString, ammoCount);
 				RE::TESObjectWEAP* weaponForm = (RE::TESObjectWEAP*)Utility::GetFormFromIdentifier(weaponString);
 				if (weaponForm) {
 					Maps::weaponDataMap.insert({ weaponForm, ammoCount });
+					logger::info("\tAdded: [{}, {}]"sv, weaponString, ammoCount);
+				}
+				else {
+					logger::info("\tSkipped: [{}, {}]"sv, weaponString, ammoCount);
 				}
 			}
 		}
 
 		// parse found keywords into forms
+		logger::info("Parser::ParsePrepMapsToMaps() -> Parsing Keyword Prep Map:"sv);
 		if (!Maps::keywordPrepMap.empty() && Maps::keywordPrepMap.size() > 0) {
 			for (const auto& keywordPrepPair : Maps::keywordPrepMap) {
 				std::string keywordString = keywordPrepPair.first;
 				uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(keywordPrepPair.second, nullptr, 16));
 
-				logger::info("Parser::ParsePrepMapsToMaps() -> Parsing [{}, {}]"sv, keywordString, ammoCount);
+				logger::info("\tParsing: [{}, {}]"sv, keywordString, ammoCount);
 				RE::BGSKeyword* keywordForm = (RE::BGSKeyword*)Utility::GetFormFromIdentifier(keywordString);
 				if (keywordForm) {
 					Maps::keywordDataMap.insert({ keywordForm, ammoCount });
+					logger::info("\tAdded: [{}, {}]"sv, keywordString, ammoCount);
+				}
+				else {
+					logger::info("\tSkipped: [{}, {}]"sv, keywordString, ammoCount);
 				}
 			}
 		}

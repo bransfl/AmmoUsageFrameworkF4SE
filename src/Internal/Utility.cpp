@@ -1,6 +1,5 @@
 #include "Internal/Utility.hpp"
 #include "Internal/Maps.hpp"
-#include <string>
 
 namespace Internal
 {
@@ -117,6 +116,10 @@ namespace Internal
 	RE::TESForm* Utility::GetFormFromIdentifier(const std::string& identifier)
 	{
 		auto dataHandler = RE::TESDataHandler::GetSingleton();
+		if (!dataHandler) {
+			return nullptr;
+		}
+
 		auto delimiter = identifier.find('|');
 		if (delimiter != std::string::npos) {
 			std::string modName = identifier.substr(0, delimiter);
@@ -139,23 +142,5 @@ namespace Internal
 			}
 		}
 		return nullptr;
-	}
-
-	// Credit: Zzxyzz, RobCo Patcher.
-	// https://github.com/Zzyxz/RobCo-Patcher/blob/main/utility.cpp
-	bool Utility::IsPluginInstalled(const char* a_modName)
-	{
-		logger::info("Utility::IsPluginInstalled() -> Checking for: {}", a_modName);
-
-		auto dataHandler = RE::TESDataHandler::GetSingleton();
-		auto* modInfo = dataHandler->LookupLoadedModByName(a_modName);
-		if (modInfo)
-			return true;
-
-		modInfo = dataHandler->LookupLoadedLightModByName(a_modName);
-		if (modInfo)
-			return true;
-
-		return false;
 	}
 }
