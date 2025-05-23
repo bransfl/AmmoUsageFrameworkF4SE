@@ -54,7 +54,7 @@ namespace Internal
 
 		logger::info("Parser::ParseINIs() -> Finished finding _AMMO.ini files. Total count: {}"sv, ammoInis.size());
 
-		logger::info("Parser::ParseINIs() -> Begin parsing ammoInis into Prep Map"sv);
+		logger::info("Parser::ParseINIs() -> Begin parsing ammoInis into Prep Map..."sv);
 
 		// parse inis into prep map
 		for (const auto& file : ammoInis) {

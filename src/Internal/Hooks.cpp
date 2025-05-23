@@ -57,13 +57,10 @@ namespace Internal
 			return (a_shotCount > 0) ? a_shotCount-- : 0;
 		}
 
-		// uint32_t ret; // TODO make this the final value to return at the end
-		//
-		uint32_t totalAmmoCount = 1;
-		uint32_t newShotCount = 1;
+		uint32_t result = 0;
 		// check weapon data for ammo usage amount
 		if (a_weapon.object != nullptr && a_weapon.object->formType == RE::ENUM_FORMTYPE::kWEAP) {
-			// weapon data
+			// setup weapon data
 			RE::TESObjectWEAP* weapon = (RE::TESObjectWEAP*)a_weapon.object;
 			RE::TESObjectWEAP::InstanceData* weaponData = (RE::TESObjectWEAP::InstanceData*)a_weapon.instanceData.get();
 			uint8_t weaponType = weapon->weaponData.type.underlying();
@@ -71,58 +68,62 @@ namespace Internal
 				weaponType = weaponData->type.underlying();
 			}
 			uint32_t loadedAmmoCount = Utility::GetWeaponLoadedAmmoCount(a_this);
+			bool weaponChargingReload = weaponData->flags.any(RE::WEAPON_FLAGS::kChargingReload);
 
-			// temp weapon info logging
-			logger::info("player's a_weapon -> formid: {:08X}, editorid: {}, weaponType: {}, ammoCapacity: {}, loadedAmmoCount: {}"sv,
-				weapon->GetFormID(), weapon->GetFormEditorID(), weaponType, weaponData->ammoCapacity, loadedAmmoCount);
+			// temp info logging
+			logger::info("Hooks::Hook_UseAmmo() -> Player Weapon Info: (FormID: {:08X}), (EditorID: {}), (weaponType: {}), (ammoCapacity: {}), (loadedAmmoCount: {}), (weaponChargingReload: {})"sv,
+				weapon->GetFormID(), weapon->GetFormEditorID(), weaponType, weaponData->ammoCapacity, loadedAmmoCount, weaponChargingReload);
 
-			// we only care about guns, no melee weapons allowed
 			if (weaponType != 9) {
-				logger::warn("Hooks::Hook_UseAmmo::weaponType was not a gun, return default value"sv);
-				return (a_shotCount > 0) ? a_shotCount-- : 0;
+				logger::warn("Hooks::Hook_UseAmmo() -> Player Weapon was not a gun, return default value"sv);
+				return (loadedAmmoCount > 0) ? loadedAmmoCount-- : 0;
 			}
 
-			// check amount of ammo to use from maps
-			uint32_t mapShotCount = Utility::GetWeaponDataFromMaps(a_weapon);
-			if (mapShotCount > 1) {
-				// was found in maps
-				// newShotCount = loadedAmmoCount - mapShotCount;
-				if (mapShotCount < loadedAmmoCount) {
-					newShotCount = loadedAmmoCount - mapShotCount;
+			// determine the amount of ammo to use
+			uint32_t mapsShotCount = Utility::GetWeaponDataFromMaps(a_weapon);
+			if (mapsShotCount > 1) {
+				// weapon data was found in Maps
+				result = (loadedAmmoCount >= mapsShotCount) ? loadedAmmoCount - mapsShotCount : 0;
+			}
+			else {
+				// weapon data was not found in Maps
+				if (weaponChargingReload == true) {
+					logger::info("Hooks::Hook_UseAmmo() -> Player Weapon has charging reload flag"sv);
+					result = 0;
 				}
 				else {
-					newShotCount = mapShotCount;
+					// normal weapon
+					logger::info("Hooks::Hook_UseAmmo() -> Player Weapon does not have charging reload flag"sv);
+					result = (loadedAmmoCount > 0) ? loadedAmmoCount - 1 : 0;
 				}
 			}
-			else {
-				// not found in maps
-				newShotCount = loadedAmmoCount - 1;
-			}
-			logger::info("Utility::GetWeaponDataFromMaps on weapon {} produced {}"sv,
-				weapon->GetFormEditorID(), newShotCount);
+			logger::info("Hooks::Hook_UseAmmo() -> Utility::GetWeaponDataFromMaps() was processed, result is now: {}"sv, result);
 
-			// ammo removal
-			// todo - clean this entire section up + fix it so it doesnt underflow as a uint32_t
-			logger::info("About to remove ammo..."sv);
-			totalAmmoCount;
-			uint32_t totalAmmoToRemove;
+			// remove ammo from the player - this is so cringe and ugly
+			uint32_t totalAmmoCount = 0;
 			player->GetItemCount(totalAmmoCount, weaponData->ammo, false);
-			logger::info("player total ammo count before firing: {}"sv, totalAmmoCount);
-			if (totalAmmoCount < mapShotCount) {
-				totalAmmoToRemove = totalAmmoCount;
+			uint32_t totalAmmoToRemove = 1;
+
+			if (mapsShotCount > 1 && totalAmmoCount >= mapsShotCount) {
+				// we have enough ammo
+				totalAmmoToRemove = mapsShotCount;
 			}
 			else {
-				totalAmmoToRemove = mapShotCount;
+				// we dont have enough ammo
+				if (weaponChargingReload) {
+					// remove the player's remaining ammo
+					totalAmmoToRemove = loadedAmmoCount;
+				}
+				else {
+					// remove 1 ammo as normal
+					totalAmmoToRemove = mapsShotCount;
+				}
 			}
-			logger::info("totalAmmoToRemove: {}"sv, totalAmmoToRemove);
-			auto* removeItemData = new RE::TESObjectREFR::RemoveItemData(weaponData->ammo, totalAmmoToRemove);
-			player->RemoveItem(*removeItemData);
-			player->GetItemCount(totalAmmoCount, weaponData->ammo, false);
-			logger::info("player total ammo count after firing: {}"sv, totalAmmoCount);
+
+			player->RemoveItem(*new RE::TESObjectREFR::RemoveItemData(weaponData->ammo, totalAmmoToRemove));
 		}
 
-		// return UseAmmo_OriginalFunction(a_this, a_weapon, a_equipIndex, a_shotCount);
-		logger::info("debug: end of hook, returning totalAmmoCount: {}"sv, totalAmmoCount);
-		return totalAmmoCount;
+		logger::info("debug: end of hook, returning result: {}"sv, result);
+		return result;
 	}
 }

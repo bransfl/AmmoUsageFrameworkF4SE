@@ -5,16 +5,16 @@ namespace Internal
 	class Maps
 	{
 	public:
-		// holds the parsed data before its loaded into actual maps
+		// [Form, AmmoAmount]
+
 		static inline std::unordered_map<std::string, std::string> weaponPrepMap;
 		static inline std::unordered_map<std::string, std::string> keywordPrepMap;
 
-		// form : ammo usage amount
 		static inline std::unordered_map<RE::TESObjectWEAP*, uint32_t> weaponDataMap;
 		static inline std::unordered_map<RE::BGSKeyword*, uint32_t> keywordDataMap;
 
 		/**
-		 * @brief Clears all maps to free memory.
+		 * @brief Clears all Maps to free memory.
 		 */
 		static inline void ClearAllMaps() noexcept
 		{
@@ -23,7 +23,7 @@ namespace Internal
 		}
 
 		/**
-		 * @brief Clears PrepMaps to free memory.
+		 * @brief Clears Prep Maps to free memory.
 		 */
 		static inline void ClearPrepMaps() noexcept
 		{
@@ -36,7 +36,7 @@ namespace Internal
 		}
 
 		/**
-		 * @brief Clears DataMaps to free memory.
+		 * @brief Clears Data Maps to free memory.
 		 */
 		static inline void ClearDataMaps() noexcept
 		{

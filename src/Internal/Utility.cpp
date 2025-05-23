@@ -34,23 +34,23 @@ namespace Internal
 
 	std::vector<RE::BGSKeyword*> Utility::GetWeaponKeywords(const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon)
 	{
-		auto keywords = std::vector<RE::BGSKeyword*>();
+		auto result = std::vector<RE::BGSKeyword*>();
 
 		RE::TESObjectWEAP::Data* weaponData = (RE::TESObjectWEAP::Data*)a_weapon.instanceData.get();
 		if (!weaponData) {
-			return keywords;
+			return result;
 		}
 
 		RE::BGSKeywordForm* keywordsForm = weaponData->keywords;
 		if (!keywordsForm) {
-			return keywords;
+			return result;
 		}
 
 		for (size_t i = 0; i < keywordsForm->numKeywords; i++) {
-			keywords.push_back(keywordsForm->keywords[i]);
+			result.push_back(keywordsForm->keywords[i]);
 		}
 
-		return keywords;
+		return result;
 	}
 
 	// Credit: Geluxrum, Lighthouse Papyrus Extender.
