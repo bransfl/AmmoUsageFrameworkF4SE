@@ -14,11 +14,12 @@ namespace Internal
 	
 	void Messaging::Callback(F4SE::MessagingInterface::Message* a_msg)
 	{
+		logger::info("messaging recieved message of type: {}", a_msg->type);
 		switch (a_msg->type) {
 			case F4SE::MessagingInterface::kGameDataReady: {
+				CSimpleIniA ini;
+				Parser::ParseINIs(ini);
 				Parser::ParsePrepMapsToMaps();
-
-				logger::info("registering ammo event sink..."sv);
 				break;
 			}
 			default: {

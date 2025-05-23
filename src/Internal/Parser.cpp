@@ -47,8 +47,12 @@ namespace Internal
 				continue;
 			}
 
+			logger::info("parser found ini: {}"sv, filename.string());
+
 			ammoInis.push_back(path);
 		}
+
+		logger::info("ammoInis final size: {}"sv, ammoInis.size());
 
 		// parse inis into prep map
 		for (const auto& file : ammoInis) {

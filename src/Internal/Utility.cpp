@@ -56,59 +56,90 @@ namespace Internal
 		return keywords;
 	}
 
-	// credit - zzxyzz robco patcher
+	// Credit: Geluxrum, Lighthouse Papyrus Extender.
+	// https://github.com/GELUXRUM/LighthousePapyrusExtender/blob/main/include/Papyrus/Functions/Actor.h
+	uint32_t Utility::GetWeaponLoadedAmmoCount(RE::Actor* a_this)
+	{
+		if (!a_this) {
+			return 0;
+		}
+
+		RE::BSAutoLock lock{ a_this->currentProcess->middleHigh->equippedItemsLock };
+
+		if (a_this->currentProcess->middleHigh->equippedItems.size() == 0) {
+			return 0;
+		}
+
+		RE::EquippedItem& equippedWeapon = a_this->currentProcess->middleHigh->equippedItems[0];
+		RE::TESObjectWEAP::InstanceData* weaponInstance = (RE::TESObjectWEAP::InstanceData*)equippedWeapon.item.instanceData.get();
+		RE::EquippedWeaponData* weaponData = (RE::EquippedWeaponData*)equippedWeapon.data.get();
+
+		if (equippedWeapon.equipIndex.index == 0 && weaponData && weaponInstance) {
+			return weaponData->ammoCount;
+		}
+
+		return 0;
+	}
+
+	// Credit: Geluxrum, Lighthouse Papyrus Extender.
+	// https://github.com/GELUXRUM/LighthousePapyrusExtender/blob/main/include/Papyrus/Functions/Actor.h
+	RE::TESAmmo* Utility::GetWeaponLoadedAmmoForm(RE::Actor* a_this)
+	{
+		if (!a_this) {
+			return nullptr;
+		}
+
+		RE::BSAutoLock lock{ a_this->currentProcess->middleHigh->equippedItemsLock };
+
+		if (a_this->currentProcess->middleHigh->equippedItems.size() == 0) {
+			return nullptr;
+		}
+
+		RE::EquippedItem& equippedWeapon = a_this->currentProcess->middleHigh->equippedItems[0];
+		RE::TESObjectWEAP::InstanceData* weaponInstance = (RE::TESObjectWEAP::InstanceData*)equippedWeapon.item.instanceData.get();
+		RE::EquippedWeaponData* weaponData = (RE::EquippedWeaponData*)equippedWeapon.data.get();
+
+		if (equippedWeapon.equipIndex.index == 0 && weaponData && weaponInstance) {
+			return weaponData->ammo;
+		}
+
+		return nullptr;
+	}
+
+	// Credit: Zzxyzz, RobCo Patcher.
+	// https://github.com/Zzyxz/RobCo-Patcher/blob/main/utility.cpp
 	template <typename T>
 	T GetOffset(const void* a_baseObject, int a_offset)
 	{
 		return *reinterpret_cast<T*>((uintptr_t)a_baseObject + a_offset);
 	}
 
-	// credit - zzxyzz robco patcher
-	// Fallout4.esm|0x456 = 2
-	RE::TESForm* Utility::GetFormFromIdentifier(std::string a_identifier)
+	// Credit: Zzxyzz, RobCo Patcher.
+	// https://github.com/Zzyxz/RobCo-Patcher/blob/main/utility.cpp
+	RE::TESForm* Utility::GetFormFromIdentifier(const std::string& identifier)
 	{
-		if (a_identifier.empty()) {
-			return nullptr;
-		}
+		auto dataHandler = RE::TESDataHandler::GetSingleton();
+		auto delimiter = identifier.find('|');
+		if (delimiter != std::string::npos) {
+			std::string modName = identifier.substr(0, delimiter);
+			std::string modForm = identifier.substr(delimiter + 1);
 
-		RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
-		if (!dataHandler) {
-			return nullptr;
-		}
-
-		size_t delimiter = a_identifier.find("|");
-		if (delimiter == std::string::npos) {
-			// if "|" was not found
-			return nullptr;
-		}
-
-		std::string_view modName = a_identifier.substr(0, delimiter);
-		std::string modForm = a_identifier.substr(delimiter + 1);
-		if (!Utility::IsPluginInstalled(modName)) {
-			// mod was not loaded
-			return nullptr;
-		}
-
-		auto* modFile = dataHandler->LookupLoadedModByName(modName);
-		if (modFile && modFile->compileIndex != -1) {
-			uint32_t formID = std::stoul(modForm, nullptr, 16) & 0xFFFFFF;
-			uint32_t flags = GetOffset<uint32_t>(modFile, 0x334);
-
-			// we do this so the formid is load order agnostic
-			if (flags & (1 << 9)) {
-				// esl plugin
-				formID &= 0xFFF;
-				formID |= 0xFE << 24;
-				formID |= GetOffset<uint16_t>(modFile, 0x372) << 12; // esl load order
+			auto* mod = dataHandler->LookupModByName(modName.c_str());
+			if (mod && mod->compileIndex != -1) {
+				uint32_t formID = std::stoul(modForm, nullptr, 16) & 0xFFFFFF;
+				uint32_t flags = GetOffset<uint32_t>(mod, 0x334);
+				if (flags & (1 << 9)) {
+					// ESL
+					formID &= 0xFFF;
+					formID |= 0xFE << 24;
+					formID |= GetOffset<uint16_t>(mod, 0x372) << 12; // ESL load order
+				}
+				else {
+					formID |= (mod->compileIndex) << 24;
+				}
+				return RE::TESForm::GetFormByID(formID);
 			}
-			else {
-				// normal plugin
-				formID |= (modFile->compileIndex) << 24;
-			}
-			return RE::TESForm::GetFormByID(formID);
 		}
-
-		// fail case
 		return nullptr;
 	}
 
@@ -117,22 +148,23 @@ namespace Internal
 		if (a_modName.empty()) {
 			return false;
 		}
+		return true;
 
-		RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
-		if (!dataHandler) {
-			return false;
-		}
+		// RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
+		// if (!dataHandler) {
+		// 	return false;
+		// }
 
-		auto* modInfo = dataHandler->LookupLoadedModByName(a_modName);
-		if (modInfo) {
-			return true;
-		}
+		// auto* modInfo = dataHandler->LookupLoadedModByName(a_modName);
+		// if (modInfo) {
+		// 	return true;
+		// }
 
-		modInfo = dataHandler->LookupLoadedLightModByName(a_modName);
-		if (modInfo) {
-			return true;
-		}
+		// modInfo = dataHandler->LookupLoadedLightModByName(a_modName);
+		// if (modInfo) {
+		// 	return true;
+		// }
 
-		return false;
+		// return false;
 	}
 } // namespace Internal

@@ -25,12 +25,28 @@ namespace Internal
 		static std::vector<RE::BGSKeyword*> GetWeaponKeywords(const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon);
 
 		/**
+		 * @brief Returns the amount of ammo loaded in the given actor's equipped gun's magazine.
+		 *
+		 * @param a_this The actor to get the loaded ammo count from.
+		 * @return The actor's magazine ammo count.
+		 */
+		static uint32_t GetWeaponLoadedAmmoCount(RE::Actor* a_this);
+
+		/**
+		 * @brief Returns the TESForm of the ammo loaded in the given actor's equipped gun's magazine.
+		 *
+		 * @param a_this The actor to get the loaded ammo form from.
+		 * @return The actor's loaded ammo form.
+		 */
+		static RE::TESAmmo* GetWeaponLoadedAmmoForm(RE::Actor* a_this);
+
+		/**
 		 * @brief Parses INI file Keys into TESForms.
 		 *
 		 * @param a_identifier a_identifier.
 		 * @return Return.
 		 */
-		static RE::TESForm* GetFormFromIdentifier(std::string a_identifier);
+		static RE::TESForm* GetFormFromIdentifier(const std::string& identifier);
 
 		/**
 		 * @brief Brief.
