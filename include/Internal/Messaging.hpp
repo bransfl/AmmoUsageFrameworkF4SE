@@ -6,13 +6,13 @@ namespace Internal
 	{
 	public:
 		/**
-		 * @brief Asd.
+		 * @brief Registers Callback() for message callbacks.
 		 */
 		static void RegisterCallback();
 
 		/**
-		 * @brief Asd.
+		 * @brief Processes F4SE callback messages.
 		 */
 		static void Callback(F4SE::MessagingInterface::Message* a_msg);
 	};
-} // namespace Internal::Messaging
+}

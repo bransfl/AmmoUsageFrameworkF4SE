@@ -15,7 +15,7 @@ namespace Internal
 		constexpr std::string_view iniExtension = ".ini"sv;
 
 		if (!exists(filepath)) {
-			logger::error("ERROR: Failed to find Data directory"sv);
+			logger::error("Parser::ParseINIs() -> ERROR: Failed to find Data directory"sv);
 			return;
 		}
 
@@ -42,22 +42,24 @@ namespace Internal
 			}
 
 			if (std::find(ammoInis.begin(), ammoInis.end(), path) != ammoInis.end()) {
-				logger::warn("WARNING: Found duplicate _AMMO.ini file: {}"sv,
+				logger::warn("Parser::ParseINIs() -> WARNING: Found duplicate _AMMO.ini file: {}"sv,
 					filename.string());
 				continue;
 			}
 
-			logger::info("parser found ini: {}"sv, filename.string());
+			logger::info("Parser::ParseINIs() -> Found _AMMO.ini file: {}"sv, filename.string());
 
 			ammoInis.push_back(path);
 		}
 
-		logger::info("ammoInis final size: {}"sv, ammoInis.size());
+		logger::info("Parser::ParseINIs() -> Finished finding _AMMO.ini files. Total count: {}"sv, ammoInis.size());
+
+		logger::info("Parser::ParseINIs() -> Starting to parse ammoInis into Prep Map"sv);
 
 		// parse inis into prep map
 		for (const auto& file : ammoInis) {
 			const std::string filename = file.filename().string();
-			logger::info("Loading config file: {}"sv, filename);
+			logger::info("Parser::ParseINIs() -> Loading config file: {}"sv, filename);
 			a_ini.LoadFile(file.wstring().data());
 			CSimpleIniA::TNamesDepend keys{};
 
@@ -76,7 +78,7 @@ namespace Internal
 					a_ini.GetAllValues("Weapons", key.pItem, values);
 					for (const auto& val : values) {
 						Maps::weaponPrepMap[key.pItem] = val.pItem;
-						logger::info("\tAdded [{}: {}] to weapon prep map"sv,
+						logger::info("\tAdded [{}, {}] to Weapon Prep Map"sv,
 							key.pItem, val.pItem);
 					}
 				}
@@ -97,7 +99,7 @@ namespace Internal
 					a_ini.GetAllValues("Keywords", key.pItem, values);
 					for (const auto& val : values) {
 						Maps::keywordPrepMap[key.pItem] = val.pItem;
-						logger::info("\tAdded [{}: {}] to keyword prep map"sv,
+						logger::info("\tAdded [{}, {}] to Keyword Prep Map"sv,
 							key.pItem, val.pItem);
 					}
 				}
@@ -109,35 +111,35 @@ namespace Internal
 
 	void Parser::ParsePrepMapsToMaps() noexcept
 	{
-		// loop through weapon prep
-		for (const auto& weaponPrepPair : Maps::weaponPrepMap) {
-			std::string weaponString = weaponPrepPair.first;
-			uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(weaponPrepPair.second, nullptr, 16));
+		// parse found weapons into forms
+		if (!Maps::weaponPrepMap.empty() && Maps::weaponPrepMap.size() > 0) {
+			for (const auto& weaponPrepPair : Maps::weaponPrepMap) {
+				std::string weaponString = weaponPrepPair.first;
+				uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(weaponPrepPair.second, nullptr, 16));
 
-			logger::info("Parser::ParsePrepMapsToMaps::weaponPrepPair is parsing weaponString: {} with ammoCount: {}"sv,
-				weaponString, ammoCount);
-			RE::TESObjectWEAP* weaponForm = (RE::TESObjectWEAP*)Utility::GetFormFromIdentifier(weaponString);
-			if (weaponForm) {
-				// brackets since we have to insert it as a pair
-				Maps::weaponDataMap.insert({ weaponForm, ammoCount });
+				logger::info("Parser::ParsePrepMapsToMaps() -> Parsing [{}, {}]"sv, weaponString, ammoCount);
+				RE::TESObjectWEAP* weaponForm = (RE::TESObjectWEAP*)Utility::GetFormFromIdentifier(weaponString);
+				if (weaponForm) {
+					Maps::weaponDataMap.insert({ weaponForm, ammoCount });
+				}
 			}
 		}
 
-		// loop through keyword prep
-		for (const auto& keywordPrepPair : Maps::keywordPrepMap) {
-			std::string keywordString = keywordPrepPair.first;
-			uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(keywordPrepPair.second, nullptr, 16));
+		// parse found keywords into forms
+		if (!Maps::keywordPrepMap.empty() && Maps::keywordPrepMap.size() > 0) {
+			for (const auto& keywordPrepPair : Maps::keywordPrepMap) {
+				std::string keywordString = keywordPrepPair.first;
+				uint32_t ammoCount = static_cast<std::uint32_t>(std::stoul(keywordPrepPair.second, nullptr, 16));
 
-			logger::info("Parser::ParsePrepMapsToMaps::keywordPrepPair is parsing keywordString: {} with ammoCount: {}"sv,
-				keywordString, ammoCount);
-			RE::BGSKeyword* keywordForm = (RE::BGSKeyword*)Utility::GetFormFromIdentifier(keywordString);
-			if (keywordForm) {
-				// brackets since we have to insert it as a pair
-				Maps::keywordDataMap.insert({ keywordForm, ammoCount });
+				logger::info("Parser::ParsePrepMapsToMaps() -> Parsing [{}, {}]"sv, keywordString, ammoCount);
+				RE::BGSKeyword* keywordForm = (RE::BGSKeyword*)Utility::GetFormFromIdentifier(keywordString);
+				if (keywordForm) {
+					Maps::keywordDataMap.insert({ keywordForm, ammoCount });
+				}
 			}
 		}
 
 		// we are finished with the prep maps, but we still need to keep data maps in memory
 		Maps::ClearPrepMaps();
 	}
-} // namespace Internal
+}

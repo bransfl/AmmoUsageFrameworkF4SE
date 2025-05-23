@@ -4,8 +4,6 @@
 
 namespace Internal
 {
-	// TODO - check if this works as a class with static inline.
-	// if not, just use static in Maps:: namespace.
 	class Maps
 	{
 	public:
@@ -16,6 +14,15 @@ namespace Internal
 		// form : ammo usage amount
 		static inline std::unordered_map<RE::TESObjectWEAP*, uint32_t> weaponDataMap;
 		static inline std::unordered_map<RE::BGSKeyword*, uint32_t> keywordDataMap;
+
+		/**
+		 * @brief Clears all maps to free memory.
+		 */
+		static inline void ClearAllMaps() noexcept
+		{
+			ClearPrepMaps();
+			ClearDataMaps();
+		}
 
 		/**
 		 * @brief Clears PrepMaps to free memory.
@@ -43,4 +50,4 @@ namespace Internal
 			}
 		}
 	};
-} // namespace Internal::Maps
+}

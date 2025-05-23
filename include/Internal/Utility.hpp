@@ -55,6 +55,6 @@ namespace Internal
 		 * @return True if the mod is installed.
 		 * 		   False if he mod is not installed.
 		 */
-		static bool IsPluginInstalled(std::string_view a_modName);
+		static bool IsPluginInstalled(const char* a_modName);
 	};
-} // namespace Internal
+}

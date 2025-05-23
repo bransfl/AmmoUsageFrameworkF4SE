@@ -19,4 +19,4 @@ namespace Internal
 		 */
 		static void ParsePrepMapsToMaps() noexcept;
 	};
-} // namespace Internal
+}

@@ -7,7 +7,7 @@ namespace Internal
 	uint32_t Utility::GetWeaponDataFromMaps(const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon)
 	{
 		if (Maps::keywordDataMap.empty() && Maps::weaponDataMap.empty()) {
-			logger::info("Utility::GetWeaponDataFromMaps - both DataMaps were empty, return 1"sv);
+			logger::info("Utility::GetWeaponDataFromMaps() -> Both Maps were empty, returning 1"sv);
 			return 1;
 		}
 
@@ -21,8 +21,6 @@ namespace Internal
 			}
 		}
 
-		// maybe check objectmods?
-
 		// check weapon form second, since this is a fallback
 		RE::TESObjectWEAP* weaponForm = (RE::TESObjectWEAP*)a_weapon.object;
 		if (weaponForm) {
@@ -31,7 +29,7 @@ namespace Internal
 			}
 		}
 
-		// the weapon/data wasn't found, return the original amount
+		// the weapon/data wasn't found, so we return the original amount
 		return 1;
 	}
 
@@ -143,28 +141,21 @@ namespace Internal
 		return nullptr;
 	}
 
-	bool Utility::IsPluginInstalled(std::string_view a_modName)
+	// Credit: Zzxyzz, RobCo Patcher.
+	// https://github.com/Zzyxz/RobCo-Patcher/blob/main/utility.cpp
+	bool Utility::IsPluginInstalled(const char* a_modName)
 	{
-		if (a_modName.empty()) {
-			return false;
-		}
-		return true;
+		logger::info("Utility::IsPluginInstalled() -> Checking for: {}", a_modName);
 
-		// RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
-		// if (!dataHandler) {
-		// 	return false;
-		// }
+		auto dataHandler = RE::TESDataHandler::GetSingleton();
+		auto* modInfo = dataHandler->LookupLoadedModByName(a_modName);
+		if (modInfo)
+			return true;
 
-		// auto* modInfo = dataHandler->LookupLoadedModByName(a_modName);
-		// if (modInfo) {
-		// 	return true;
-		// }
+		modInfo = dataHandler->LookupLoadedLightModByName(a_modName);
+		if (modInfo)
+			return true;
 
-		// modInfo = dataHandler->LookupLoadedLightModByName(a_modName);
-		// if (modInfo) {
-		// 	return true;
-		// }
-
-		// return false;
+		return false;
 	}
-} // namespace Internal
+}
