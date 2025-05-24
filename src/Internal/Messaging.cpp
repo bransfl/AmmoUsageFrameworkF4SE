@@ -11,7 +11,7 @@ namespace Internal
 
 		logger::info("Registered for F4SE events."sv);
 	}
-	
+
 	void Messaging::Callback(F4SE::MessagingInterface::Message* a_msg)
 	{
 		switch (a_msg->type) {

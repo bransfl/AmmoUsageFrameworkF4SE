@@ -20,6 +20,6 @@ namespace Internal
 		 * @param a_shotCount The amount of ammo used per shot.
 		 * @return The final amount of ammo the actor will have after firing a shot.
 		 */
-		static uint32_t Hook_UseAmmo(RE::Actor* a_this, const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon, RE::BGSEquipIndex a_equipIndex, std::uint32_t a_shotCount);
+		static uint32_t UseAmmo_Hook(RE::Actor* a_this, const RE::BGSObjectInstanceT<RE::TESObjectWEAP>& a_weapon, RE::BGSEquipIndex a_equipIndex, std::uint32_t a_shotCount);
 	};
 }
